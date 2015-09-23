@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CFPrototype version 2.0
+Copyright 2008, Qasim Rasheed
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+$Date: 2008-07-04 21:55:02 -0400 (Fri, 04 Jul 2008) $
+$Revision: 78 $
+
+-->
+<project name="cfunited2008-cfprototype-unittests-build" default="run-all-unittest">
+	<description>
+		This build file can be used to run individual unit tests as well as run them all together.
+	</description>
+	
+	<!-- define the cfunit task -->
+	<taskdef name="cfunit" classname="net.sourceforge.cfunit.ant.CFUnit" description="define the cfunit task" />
+	
+	<!-- ANT Contib library --> 
+	<taskdef resource="net/sf/antcontrib/antlib.xml" description="ANT Contib library" />
+	
+	<!-- properties file for unit tests -->
+	<property file="unittest.properties" prefix="unittest" description="properties file for unit tests" />
+	
+	<!--define the target server where unit test will be ran. -->
+	<property name="target" value="${unittest.server.development}" description="define the target server where unit test will be ran." />
+	
+	<!-- file location where results will be saved. -->
+	<property name="resultFile" value="${unittest.resultfile}" description="file location where results will be saved." />
+		
+	<target name="test-notedao" description="unit test for NoteDAO">
+		<run-unit cfc="testNoteDAO" />
+	</target>
+
+	<target name="test-noteparser" description="unit test for NoteParser">
+		<run-unit cfc="testNoteParser" />
+	</target>
+	
+	<target name="test-udf" description="unit test for UDF cfc">
+		<run-unit cfc="testUDF" />	
+	</target>
+	
+	<target name="test-noteservice" description="unit test for NoteService cfc">
+		<run-unit cfc="testNoteService" />
+	</target>
+	
+	<target name="test-pagedao" description="unit test for PageDAO">
+		<run-unit cfc="testPageDAO" />
+	</target>
+	
+	<target name="test-pageservice">
+		<run-unit cfc="testPageService" />
+	</target>
+	
+	<target name="test-userservice">
+		<run-unit cfc="testUserService" />
+	</target>
+	
+	<target name="test-rssservice">
+		<run-unit cfc="testRSSService" />
+	</target>
+	
+	<target name="test-securityservice">
+		<run-unit cfc="testSecurityService" />
+	</target>
+	
+	<target name="test-userdao">
+		<run-unit cfc="testUserDAO" />
+	</target>
+	
+	<target name="test-view">
+		<run-unit cfc="testView" path="${unittest.path.view}" />
+	</target>
+	
+	<target name="run-all-unittest" description="This is a default target for this build file and will run all targets except for itself and run-all-report target.">
+		<run-all />
+	</target>
+	
+	<target name="run-all-unittest-report" description="This target is usually called from the central build file. It saves the result to a file instead of displaying those in console windown.">
+		<delete file="${resultFile}" failonerror="false" />
+		<run-all report="true" />
+	</target>
+	
+	<!-- Macrodefs -->
+	<macrodef name="run-unit" description="this macrodef is meant to run each unit test by calling the cfunit ant task.">
+		<attribute name="cfc" />
+		<attribute name="path" default="${unittest.path.model}" />
+		<attribute name="server" default="${target}" />
+		<sequential>
+			<stopwatch action="start" name="@{cfc}"/>
+			<echo>Running Unit Test @{server}@{path}@{cfc}.cfc</echo>
+			<cfunit testcase="@{server}@{path}@{cfc}.cfc" verbose="true"  />
+			<stopwatch action="total" name="@{cfc}"/>
+		</sequential>
+	</macrodef>
+			
+	<macrodef name="run-all" description="This macrodef is able to run all the targets defined in this build file except run-all-unittest and run-all-unittest-report.">
+		<attribute name="report" default="false" />
+		<attribute name="resultfile" default="${resultFile}" />
+		<sequential>
+			<script language="javascript">
+				<![CDATA[
+				var targets = new Array();
+				for ( e = project.getTargets().keys(); e.hasMoreElements(); ) {
+					thisTarget = e.nextElement() + "";
+					if (	thisTarget.split(".").length == 1 
+							&& thisTarget != 'run-all-unittest-report' 
+							&& thisTarget != 'run-all-unittest'
+							&& thisTarget.indexOf( 'test-') != -1
+							&& thisTarget.length > 0 ){
+						targets.push(thisTarget);
+					}
+				}
+				project.setUserProperty( "targets", targets.join("~") );
+				]]>
+			</script>
+			
+			<for list="${targets}" delimiter="~" trim="true" param="thisTarget">
+				<sequential>
+					<trycatch property="unit.failed">
+						<try>
+							<runtarget target="@{thisTarget}" />
+						</try>
+						<catch>
+							<if>
+								<equals arg1="@{report}" arg2="false" trim="true" />
+								<then>
+									<echo>${unit.failed}</echo>
+								</then>
+								<else>
+									<echo>Writing to file @{resultfile}</echo>
+									<echo file="@{resultfile}" append="true">${unit.failed}</echo>
+								</else>
+							</if>
+							
+						</catch>
+					</trycatch>
+				</sequential>
+			</for>
+		</sequential>
+	</macrodef>
+
+</project>

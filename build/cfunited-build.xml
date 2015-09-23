@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CFPrototype version 2.0
+Copyright 2008, Qasim Rasheed
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+$Date: 2008-07-04 21:55:02 -0400 (Fri, 04 Jul 2008) $
+$Revision: 78 $
+
+-->
+<project name="cfunited2008-cfprototype-build" default="deploy">
+	<description>
+	This is our master ANT build file. 	Two publicly available targets are
+		1. staging
+		2. deploy (default)
+	This build file is customized for my machine so it will not run as it is. 
+	Remember to change the svn repository, paths and mail setting in build.properties file to make this build file work.	
+	</description>		
+	
+	<!-- define svn ant task -->
+	<taskdef resource="svntask.properties" description="define svn ant task " />
+	
+	<!-- ANT Contib library --> 
+	<taskdef resource="net/sf/antcontrib/antlib.xml" description="ANT Contib library" />
+	
+	<!-- define time stamp in two different format -->
+	<tstamp prefix="ts" description="define time stamp in two different format">
+		<format property="today" pattern="MM/dd/yyyy hh:mm aa" />
+		<format property="short" pattern="yyyyMMdd" />
+	</tstamp>
+	
+	<!-- import property file -->
+	<property file="cfunited.build.properties"  description="import property file" />
+	
+	<!-- import the unit test build file -->
+	<import file="unit-test.xml" description="import the unit test build file"/>
+	
+	<!-- import the selenium test build file -->
+	<import file="selenium.xml" description="import the selenium test build file" />
+	
+	<!-- define the version number for the application here. -->
+	<property name="version" value="1.0" />
+	
+	<!-- define here the result file to hold the unit test results. -->
+	<property name="resultfile.unittest" value="results/unit-test-result-${ts.short}-ver${version}.txt" />
+	
+	<!-- define here the result file to hold the selenium test results. -->
+	<property name="selenium.resultfile" value="results/selenium-result-${ts.short}-ver${version}.html" />
+	
+	
+	<target name="deploy" description="Use this target if you are doing a full deployment." depends="staging" unless="selenium.failed">
+		<svn-move dest="${svn.tags}${version}" src="${svn.staging}" message="Making a release tag for version ${version} on ${ts.today}" />
+		<svn-export dirpath="${path.production}" svnpath="${svn.staging}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${path.production}/_tests" />
+			<fileset dir="${path.production}/build" />
+		</delete>
+		<applyregex file="${path.production}/view/vcfprototype/lay_admin.cfm" expression="" pattern='&lt;div.*id="servericon".*&lt;/div&gt;' />
+		<applyregex file="${path.production}/view/vcfprototype/lay_cfprototype.cfm" expression="" pattern='&lt;div.*id="servericon".*&lt;/div&gt;' />
+		<applyregex file="${path.production}/index.cfm" expression="production" pattern="development-circuit-load" />
+	</target>
+	
+	<target name="staging" depends="make-staging,-run-unit-tests,-run-selenium" 
+			description="This target will create a staging branch in svn, move the code to staging server and run unittest and selenium test against that build on that server.">
+	</target>
+	
+	<target name="-run-selenium" depends="-run-unit-tests,-run-selenium-tests-on-staging,-notify-selenium-failed" unless="unit.failed" description="This target will run all selenium test cases if previously ran unit test passed.">
+	</target>
+	
+	<target name="-notify-selenium-failed" if="selenium.failed">
+		<email to="${mail.to}" subject="Selenium Test failed for version ${version} on ${ts.today}">
+			<attachments>
+				<fileset file="${selenium.resultfile}" />
+			</attachments>
+		</email>
+	</target>
+	
+	<target name="-run-selenium-tests-on-staging" unless="unit.failed" description="This calls a target in selenium build file. This will only run if all the unit test passed.">
+		<antcallback target="cfunited2008-cfprototype-seleniumTests-build.run-selenium-tests" return="selenium.failed">
+			<param name="target" value="${server.staging}" />
+			<!-- passing in the JDBC url for staging database since we'll be running our selenium test there -->
+			<param name="database" value="jdbc:sqlserver://localhost;databasename=cfprototype_staging" />
+			<param name="resultsFile" value="${selenium.resultfile}" />
+		</antcallback>
+	</target>
+	
+	
+	<target name="-run-unit-tests" depends="-run-unit-tests-on-staging,-notify-failed-unit-test">
+	</target>
+	
+	<target name="-notify-failed-unit-test" if="unit.failed" description="This target will send emails if any unit test fail with the report as an attachment. This target is only run if the unit.failed property is set.">
+		<email to="${mail.to}" subject="Unit test failed for version ${version} on ${ts.today}">
+			<attachments>
+				<fileset file="${resultfile.unittest}" />
+			</attachments>
+		</email>
+	</target>
+	
+	<target name="-run-unit-tests-on-staging" description="This target calls a target in the unit test build file. Later it sets a property if there were any errors in unit test.">
+		<antcall target="cfunited2008-cfprototype-unittests-build.run-all-unittest-report" description="Call the desired target in unit test build file.">
+			<param name="target" value="${server.staging}cfprototype/" />
+			<param name="resultFile" value="${resultfile.unittest}" />
+		</antcall>
+		<condition property="unit.failed">
+			<and>
+				<!-- check is the result file is available -->
+				<available file="${resultfile.unittest}" />
+				<!-- check is length is GT 0 -->
+				<length file="${resultfile.unittest}" length="0" when="gt" />
+			</and>
+		</condition>
+	</target>
+		
+	<target name="make-staging" description="This target first move everything from trunk into staging branch. Then export the staging branch to staging server. And finally apply some substitutions to change fusebox mode etc.">
+		<!-- first move everything from trunk into staging branch -->
+		<svn-move dest="${svn.staging}" src="${svn.trunk}" message="Making a staging release on ${ts.today}" />
+		<!-- export the staging branch to staging server -->
+		<svn-export svnpath="${svn.staging}" dirpath="${path.staging}" />
+		<!-- regular expression substitutions -->
+		<applyregex file="${path.staging}/view/vcfprototype/lay_admin.cfm" expression="staging-corner.gif" pattern="dev-corner.gif" />
+		<applyregex file="${path.staging}/view/vcfprototype/lay_cfprototype.cfm" expression="staging-corner.gif" pattern="dev-corner.gif" />
+		<applyregex file="${path.staging}/index.cfm" expression="production" pattern="development-circuit-load" />
+	</target>
+	
+	<macrodef name="svn-export" description="This macrodef will export a svn project to a folder. It will also clean the target folder before export from subversion.">
+		<!-- required attributes -->
+		<attribute name="svnpath" />
+		<attribute name="dirpath" />
+		<sequential>
+			<echo taskname="svn-export">Cleaning up @{dirpath}</echo>
+			<delete includeemptydirs="true" failonerror="false">
+				<fileset dir="@{dirpath}" />
+			</delete>
+			<echo taskname="svn-export">Exporting @{svnpath} to @{dirpath}</echo>
+			<svn>
+				<export srcurl="@{svnpath}" destpath="@{dirpath}" />
+			</svn>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="svn-move" description="This macrodef will move on svn project into another location. It will also try to delete the dest if it already exists.">
+		<!-- required attributes -->
+		<attribute name="src" />
+		<attribute name="dest" />
+		<attribute name="message" />
+		<sequential>
+			<trycatch>
+				<try>
+					<svn>
+						<delete url="@{dest}" message="deleting" />
+					</svn>	
+				</try>		
+				<catch></catch>
+			</trycatch>
+			<echo taskname="svn-move">Moving @{src} to @{dest}.</echo>
+			<svn>
+				<copy srcUrl="@{src}" destUrl="@{dest}" message="@{message}" />
+			</svn>
+		</sequential>
+	</macrodef> 
+	
+	<macrodef name="applyregex" description="a utitlity task for regular exression based substitution.">
+		 <!-- required attributes -->   
+		<attribute name="file"  />
+		<attribute name="pattern" />
+		<attribute name="expression" />
+		<sequential>
+			<replaceregexp match="@{pattern}" replace="@{expression}" flags="igm">
+				<fileset file="@{file}" />
+			</replaceregexp>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="email">
+        <!-- required attributes -->    
+        <attribute name="to" />
+        <attribute name="subject" />
+        <!-- optional attributes -->
+		<attribute name="mailhost" default="${mail.host}" />
+		<attribute name="user" default="${mail.user}"/>
+		<attribute name="password" default="${mail.password}"/>
+		<attribute name="port" default="${mail.port}" />
+		<attribute name="from" default="${mail.from}" />
+        <attribute name="attachment" default="" />
+        <attribute name="mimetype" default="text/plain" />
+        <!-- text -->
+        <text name="message" />
+        <!-- elements -->
+        <element name="headers" optional="true" />
+        <element name="attachments" optional="true" />
+        <sequential>
+            <mail
+                from	= "@{from}"
+                toList	= "@{to}"
+                subject	= "@{subject}"
+                files = "@{attachment}"
+                mailhost= "@{mailhost}"
+				user="@{user}" 
+            	password="@{password}" 
+            	mailport="@{port}" 
+            	ssl="true">
+                <headers />
+                <attachments /> 
+                <message mimetype="@{mimetype}">
+                    @{message}
+                </message>    
+            </mail>
+        </sequential>
+    </macrodef>
+	
+</project>

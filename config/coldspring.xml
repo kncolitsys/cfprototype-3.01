@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE beans PUBLIC "coldspring.dtd" "coldspring.dtd">
+<!--
+CFPrototype version 2.0
+Copyright 2008, Qasim Rasheed
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+$Date: 2008-07-04 22:23:38 -0400 (Fri, 04 Jul 2008) $
+$Revision: 83 $
+
+-->
+<beans>	 
+	<bean id="datasource" class="coldspring.beans.factory.config.MapFactoryBean">
+		<property name="sourceMap">
+			<map>
+				<entry key="dsn"><value>cfprototype</value></entry>
+				<entry key="username"><value>cfprototype</value></entry>
+				<entry key="password"><value>cfprototype</value></entry>
+			</map>
+		</property>
+	</bean>
+		 
+	<bean id="config" class="coldspring.beans.factory.config.MapFactoryBean">
+		<property name="sourceMap">
+			<map>
+				<!-- a uniqe name for the prototype -->
+				<entry key="prototypeName"><value>sample</value></entry>
+				<!-- this will be used a subject for the emails when a note is submitted. -->
+				<entry key="prototypeTitle"><value>Sample Prototype</value></entry>
+				<entry key="defaultPage"><value>home</value></entry>
+				<entry key="mailserver"><value></value></entry>
+				<entry key="emailPoster"><value>true</value></entry>
+				<entry key="fromEmail"><value>qasim@qasimrasheed.com</value></entry>
+				<entry key="layouts">
+					<map>
+						<entry key="defaultlayout"><value>lay_template</value></entry>
+						<entry key="files">
+							<map>
+								<entry key="lay_template"><value>lay_template</value></entry>
+							</map>
+						</entry>
+					</map>
+				</entry>
+				<entry key="applicationURL"><value>${applicationURL}</value></entry>
+			</map>
+		</property>
+	</bean>
+	
+		
+	<bean id="AbstractDAO" class="" abstract="true">
+		<property name="dsn">
+			<ref bean="datasource" />
+		</property>
+		<property name="config">
+			<ref bean="config" />
+		</property>
+	</bean>
+	
+	<bean id="AbstractService" class="" abstract="true">
+		<property name="udf">
+			<ref bean="UDF" />
+		</property>
+		<property name="config">
+			<ref bean="config" />
+		</property>
+	</bean>
+	
+	<bean id="NoteDAO" class="cfprototype.model.com.cfprototype.NoteDAO" parent="AbstractDAO">
+	
+	</bean>
+	
+	<bean id="PageDAO" class="cfprototype.model.com.cfprototype.PageDAO" parent="AbstractDAO">
+	
+	</bean>
+	
+	<bean id="UserDAO" class="cfprototype.model.com.cfprototype.UserDAO" parent="AbstractDAO">
+	
+	</bean>
+	
+	<bean id="JSON" class="cfprototype.model.com.cfprototype.json" />
+	
+	<bean id="UDF" class="cfprototype.model.com.cfprototype.UDF" />
+
+	<bean id="NoteService" class="cfprototype.model.com.cfprototype.NoteService" parent="AbstractService">
+		<property name="NoteDAO"><ref bean="NoteDAO" /></property>
+		<property name="UserDAO"><ref bean="UserDAO" /></property>
+		<property name="SecurityService"><ref bean="SecurityService" /></property>
+	</bean>
+	
+	
+	
+	<bean id="PageService" class="cfprototype.model.com.cfprototype.PageService" parent="AbstractService">
+		<property name="PageDAO"><ref bean="PageDAO" /></property>
+		<property name="NoteService"><ref bean="NoteService" /></property>
+	</bean>
+	
+	<bean id="RSSService" class="cfprototype.model.com.cfprototype.RSSService" parent="AbstractService" init-method="configure">
+		<property name="NoteDAO"><ref bean="NoteDAO" /></property>
+	</bean>
+	
+	<bean id="SecurityService" class="cfprototype.model.com.cfprototype.SecurityService" parent="AbstractService">
+		<property name="UserDAO"><ref bean="UserDAO" /></property>
+	</bean>
+	
+	<bean id="UserService" class="cfprototype.model.com.cfprototype.UserService" parent="AbstractService">
+		<property name="UserDAO"><ref bean="UserDAO" /></property>
+	</bean>
+</beans>
+

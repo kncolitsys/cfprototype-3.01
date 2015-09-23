@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CFPrototype version 2.0
+Copyright 2008, Qasim Rasheed
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+$Date: 2008-07-04 21:55:02 -0400 (Fri, 04 Jul 2008) $
+$Revision: 78 $
+
+-->
+<project name="cfunited2008-cfprototype-seleniumTests-build" default="run-selenium-tests">
+	<description>
+		This build file is used to define all selenium tests.
+	</description>
+	
+	<!-- define selenese task -->
+	<taskdef resource="selenium-ant.properties" description="define selenese task. selenium-server jar is in ANT lib folder." />
+	
+	<!-- read the property file for this build -->
+	<property file="selenium.properties" prefix="selenium" description="read the property file for this build" />
+	
+	<!--define the target server where selenium test will be ran. -->
+	<property name="target" value="${selenium.server.development}" description="define the target server where selenium test will be ran" />
+	
+	<!-- database jdbc url which includes the database name. This can be passed from the central build file if you have different databases for each server -->
+	<property name="database" value="${selenium.db.jdbcURL}" description="database jdbc url which includes the database name. This can be passed from the central build file if you have different databases for each server" />
+	
+	<!-- file location where results will be saved. -->
+	<property name="resultsFile" value="${selenium.result}" description="file location where results will be saved." />
+	
+	<!-- This task will run two sql scripts. One to clear out the notes table and other to make sure than we have our selenium user in the cfp_user table. -->
+	<target name="selenium-init" description="This task will run two sql scripts. One to clear out the notes table and other to make sure than we have our selenium user in the cfp_user table.">
+		<echo>Running the SQL Task on ${database}</echo>
+		<sql 	driver="${selenium.db.jdbcClasspath}" 
+				url="${database}" 
+				userid="${selenium.db.username}" 
+				password="${selenium.db.password}" 
+				classpath="${selenium.db.jar}" 
+				taskname="sql-task">
+			<classpath>
+				<pathelement path="${selenium.db.jdbcClassPath}" />
+			</classpath>
+				DELETE 
+				FROM cfp_note
+			
+				IF NOT EXISTS ( SELECT * FROM cfp_user WHERE  username = 'selenium')
+				BEGIN
+				INSERT INTO cfp_user
+				(id,first_name, last_name, email, username, password, prototype_id, is_admin)
+				SELECT	MAX( id ) + 1 AS nextID 
+						, 'Selenium' AS first_name
+						, 'User' AS last_name
+						, 'qasim.lists@gmail.com' AS email
+						, 'selenium' AS username
+						, 'selenium' AS password
+						, 'sample' AS prototype_id
+						, 'Y' AS isadmin
+				FROM cfp_user
+				END
+		</sql>
+	</target>
+	
+	<!-- This is the target that actually calls the selenese task on our selenium test suite. -->
+	<target name="run-selenium-tests" depends="selenium-init" description="This is the target that actually calls the selenese task on our selenium test suite.">
+		<echo>Running Selenium Suite ${selenium.suite} on ${target} server.</echo>
+		<selenese 	browser="${selenium.browser.target}" 
+					failureproperty="selenium.failed" 
+					timeoutinseconds="600"
+					starturl="${target}"
+					multiwindow="true"
+					suite="${selenium.suite}"
+					results="${resultsFile}"
+					haltonfailure="${selenium.stoponfailure}"/>		
+	</target>
+</project>

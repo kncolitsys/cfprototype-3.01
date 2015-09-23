@@ -1,0 +1,257 @@
+/*
+CFPrototype version 2.0
+Copyright 2008, Qasim Rasheed
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+$Date: 2008-07-04 21:55:02 -0400 (Fri, 04 Jul 2008) $
+$Revision: 78 $
+*/
+/*------------------------------------------------------------*
+**  Global
+**------------------------------------------------------------*/
+body {
+	background: #fff url(/view/_images/site/bg2.gif); /* Optional */
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 75%;
+	text-align: center; /* IE Fix */
+	margin: 0;
+	color: #666;
+	}
+acronym { cursor: help; border-bottom: 1px dashed #999; }
+a { text-decoration: none; color: #369; border-bottom: 1px dashed #369; }
+a:hover { border-bottom: 1px dashed #49515C; color: #49515C; }
+
+ul#social{
+	padding: 1px;
+	margin:0;	
+}
+ul#social li{
+	list-style-type: none;
+	margin-bottom: 10px;
+}
+
+a.nolink,a.nolink:hover { text-decoration: none; color: #369; border: none; }
+
+/*------------------------------------------------------------*
+**  Container
+**------------------------------------------------------------*/	
+#container {
+	margin: 0 auto;
+	width: 800px;
+	background: #fff url(/view/images/site/dot_line.gif) repeat-y 25%;
+	border: 1px solid #ddd;
+	padding: 0 5px;
+	text-align: left; /* Cancel IE Fix */
+	}
+	
+/*------------------------------------------------------------*
+**  Header
+**------------------------------------------------------------*/		
+#header {
+	background: #49515C url(/view/_images/header_right.gif) no-repeat 100% 0;
+	border-bottom: 4px solid #fff;
+	border-top: 5px solid #fff;
+	padding: 28px 30px;
+	}	
+#header h1 { 	
+	margin: 0;
+	color: #C6C4C5;
+	font-size: 1.8em;
+	font-weight: normal;
+	cursor: default;
+	}	
+#header h2 { 	
+	margin: 0;
+	color: #8D8E90;
+	font-size: 1.2em;
+	padding-left: 1px;
+	cursor: default;
+	}	
+
+/*------------------------------------------------------------*
+**  Nav
+**------------------------------------------------------------*/
+
+#nav {
+	background: #858F9E; 
+	border-bottom: 4px solid #fff;
+	margin: 0; 
+	padding: 0;
+	height: 2.2em;
+	}
+#nav li {
+	list-style-type: none;
+	display: inline;
+	line-height: 20px;
+	}		
+#nav li a { 
+	text-decoration: none; 
+	color: #ddd;
+	background-color: #858F9E;
+	border-right: 4px solid #fff; 
+	border-bottom: 0;
+	padding: 3px 8px;
+	font-size: 1em;
+	float: left;
+	font-weight: bold;
+	}
+#nav li a:hover { background-color: #6B7687; }
+#nav li a.on { background-color: #49515C; color: #C6C4C5; }
+
+/*------------------------------------------------------------*
+**  Side Bar
+**------------------------------------------------------------*/
+#sidebar {
+	float: left;
+	width: 180px;
+	position: relative;
+	line-height: 20px; 
+	word-spacing: 2px;	
+	}
+#sidebar div { background: #fff url(/view/_images/para_bg.jpg) repeat-x; }	
+/*------------------------------------------------------------*
+**  Side Bar & Content
+**------------------------------------------------------------*/
+#sidebar h3 { 
+	font-size: 1.1em; 
+	color: #49515C; 
+	margin: 0 5px 0 0; 
+	cursor: default;
+	}
+#content h3	{
+	font-size: 1.8em; 
+	color: #49515C; 
+	margin: 0 5px 0 0; 
+	cursor: default;
+}
+#content div, #sidebar div { 
+	padding: 1px 0 10px 0;  
+	border-top: 1px solid #ddd; 
+  	padding: 10px;
+}	
+/*------------------------------------------------------------*
+**  Content
+**------------------------------------------------------------*/
+#content {
+	float: left;
+	width: 610px;
+	position: relative;
+	margin-left: 10px;
+	line-height: 20px; 
+	text-align: justify; 
+	word-spacing: 2px;	
+	}	
+#content div.header { background: #fff url(/view/_images/para_bg.jpg) repeat-x; }	
+/*------------------------------------------------------------*
+**  Footer
+**------------------------------------------------------------*/
+#footer {
+	background: #49515C url(/view/_images/header_right.gif) no-repeat 100% 0;
+	border-bottom: 5px solid #fff;
+	border-top: 10px solid #fff;
+	text-align: center;	
+	color: #fff;
+	font-size: 0.8em;
+	padding: 10px;
+	line-height: 16px;
+	clear: both;
+	}
+	
+#footer a { text-decoration: none; color: #A2AFBF; border-bottom: 1px dashed #A2AFBF; }
+#footer a:hover { border-bottom: 1px dashed #fff; color: #fff; }
+
+
+div.formrow {
+  clear:both; 
+  width:100%;
+  background:none;
+  padding: 0;
+  margin: 0;
+  border:0;
+}
+
+.nobackground{
+	background: none;
+}
+
+fieldset {
+  	min-width:30%;
+  	max-width:100%;
+  	font-weight:bold;
+  	font-size:11px;
+  	border:1px solid black;
+ 	padding-top:0px;
+  	padding-right:0px;
+  	margin:0;
+  	margin-bottom:1.5em;
+  	background:#EFEFEF;
+}
+
+.validation-advice, .custom-advice  {
+	display:none;
+}
+
+input.required, textarea.required {
+	border: 1px solid #00A8E6;
+}
+input.validation-failed, textarea.validation-failed {
+	border: 1px solid #FF3300;
+	color : #FF3300;
+}
+input.validation-passed, textarea.validation-passed {
+	border: 1px solid #00CC00;
+	color : #000;
+}
+input {
+  vertical-align:middle;
+  color:#000000;
+  background-color:#FFFFFF;
+  border-top:solid 2px #C0C5CD;
+  border-right:solid 2px #98A1B0;
+  border-bottom:solid 2px #98A1B0;
+  border-left:solid 2px #C0C5CD;
+}
+
+label, .label {
+  float:left;
+  width:20%;
+  margin-right:0.5em;
+  padding-top:0.2em;
+  padding-bottom:0.2em;
+  padding-right:0.2em;
+  text-align:right;
+  vertical-align:middle;
+  font-weight:bold;
+}
+
+input.button {
+  font-weight:bold;
+  color:white;
+  background-color:#4a515a;
+  border-top:solid 2px #C0C5CD;
+  border-right:solid 2px #98A1B0;
+  border-bottom:solid 2px #98A1B0;
+  border-left:solid 2px #C0C5CD;
+  padding:2px;
+}
+
+a.word{
+	background: url(/view/_images/word.gif) repeat-y;
+	padding-left:15pt;
+}
+
+a.pdf{
+	background: url(/view/_images/pdf.gif) repeat-y;
+	padding-left:15pt;
+}
